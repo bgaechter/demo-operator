@@ -1,8 +1,7 @@
 apiVersion: demo.example.com/v1
 kind: Demo
 metadata:
-  name: example-demo
+  name: example
 spec:
-  # Add fields here
-  count: 3
+  count: 1
   message: "Hello World!"

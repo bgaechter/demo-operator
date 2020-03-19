@@ -15,7 +15,6 @@ spec:
       serviceAccountName: demo-operator
       containers:
         - name: demo-operator
-          # Replace this with the built image name
           image: docker.io/bgaechter/demo-operator:0.0.1
           command:
           - demo-operator

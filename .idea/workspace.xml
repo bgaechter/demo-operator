@@ -3,7 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="100cf81e-29d2-4c0b-bf03-c071231acf07" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/crds/demo.example.com_v1_demo_cr.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/crds/demo.example.com_v1_demo_cr.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/operator.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/operator.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/apis/demo/v1/demo_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/apis/demo/v1/demo_types.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/controller/demo/demo_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/controller/demo/demo_controller.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
