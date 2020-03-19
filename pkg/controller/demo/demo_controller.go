@@ -2,8 +2,10 @@ package demo
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	demov1 "github.com/bgaechter/demo-operator/pkg/apis/demo/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -100,52 +102,135 @@ func (r *ReconcileDemo) Reconcile(request reconcile.Request) (reconcile.Result, 
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+	// Define a new Deployment object
+	deployment := newDemoDeployment(instance)
+
+	// Define a new Service object
+	service := newService(instance)
 
 	// Set Demo instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	if err := controllerutil.SetControllerReference(instance, service, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if Deployment already exists
+	deploymentFound := &appsv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, deploymentFound)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+		err = r.client.Create(context.TODO(), deployment)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	} else {
+		if deploymentFound.Spec.Replicas != &instance.Spec.Count {
+			reqLogger.Info("Updating a existing Deployment count", "Deployment.Namespace", deploymentFound.Namespace, "Deployment.Name", deploymentFound.Name)
+			//deploymentFound.Spec.Replicas = &instance.Spec.Count
+			r.client.Update(context.TODO(), deployment)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
 
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
+		if deploymentFound.Spec.Template.Annotations["message"] != instance.Spec.Message {
+			reqLogger.Info("Updating a existing Deployment message", "Deployment.Namespace", deploymentFound.Namespace, "Deployment.Name", deploymentFound.Name)
+			//deploymentFound.Spec.Replicas = &instance.Spec.Count
+			r.client.Update(context.TODO(), deployment)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+	}
+
+	// Check if Service already exists
+	serviceFound := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, serviceFound)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service", "Service.Namespace", service.Namespace, "Service.Name", service.Name)
+		err = r.client.Create(context.TODO(), service)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *demov1.Demo) *corev1.Pod {
+func newService(cr *demov1.Demo) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name + "-service",
+			Namespace: cr.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"app": cr.Name,
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Protocol:   corev1.ProtocolTCP,
+					Port:       8000,
+					TargetPort: intstr.IntOrString{IntVal: 8000},
+				},
+			},
+		},
+		Status: corev1.ServiceStatus{},
+	}
+}
+
+func newDemoDeployment(cr *demov1.Demo) *appsv1.Deployment {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
-	return &corev1.Pod{
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
+			Name:      cr.Name + "-deployment",
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &cr.Spec.Count,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": cr.Name,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cr.Name + "-pod",
+					Namespace: cr.Namespace,
+					Labels:    labels,
+					Annotations: map[string]string{
+						"message": cr.Spec.Message,
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "demo-container",
+							Image: "bgaechter/sws",
+							Env: []corev1.EnvVar{
+								{
+									Name: "MESSAGE",
+									Value: cr.Spec.Message,
+								},
+							},
+							Ports: []corev1.ContainerPort{
+								{
+									Protocol:      corev1.ProtocolTCP,
+									ContainerPort: 8000,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
