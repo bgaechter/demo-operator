@@ -28,3 +28,4 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: bgaechter/demo-operator
         tag_with_ref: true
+        dockerfile: build/Dockerfile 
