@@ -102,7 +102,7 @@ func (r *ReconcileDemo) Reconcile(request reconcile.Request) (reconcile.Result, 
 	} else {
 		if deploymentFound.Spec.Replicas != &instance.Spec.Count {
 			reqLogger.Info("Updating a existing Deployment count", "Deployment.Namespace", deploymentFound.Namespace, "Deployment.Name", deploymentFound.Name)
-			r.client.Update(context.TODO(), deployment)
+			err = r.client.Update(context.TODO(), deployment)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -110,7 +110,7 @@ func (r *ReconcileDemo) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 		if deploymentFound.Spec.Template.Annotations["message"] != instance.Spec.Message {
 			reqLogger.Info("Updating a existing Deployment message", "Deployment.Namespace", deploymentFound.Namespace, "Deployment.Name", deploymentFound.Name)
-			r.client.Update(context.TODO(), deployment)
+			err = r.client.Update(context.TODO(), deployment)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
