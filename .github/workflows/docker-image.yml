@@ -20,7 +20,7 @@ jobs:
         chmod +x operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu && sudo mkdir -p /usr/local/bin/ && sudo cp operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu /usr/local/bin/operator-sdk && rm operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
         operator-sdk build docker.io/bgaechter/demo-operator
       env:
-        OPERATOR_VERSION: v0.19.0
+        RELEASE_VERSION: v0.19.0
     - name: Push to Docker Hub
       uses: docker/build-push-action@v1
       with:
