@@ -1,12 +1,9 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/bgaechter/demo-operator)](https://goreportcard.com/report/github.com/bgaechter/demo-operator)
+![Build](https://github.com/bgaechter/demo-operator/workflows/Build/badge.svg)
 # Demo Operator
 
-This a example of an operator implemented with the [Operator SDK](https://github.com/operator-framework/getting-started/blob/master/README.md)
+This an example of an operator implemented with the [Operator SDK](https://github.com/operator-framework/getting-started/blob/master/README.md)
 
-## Build
-```bash
-$ operator-sdk build docker.io/<user>/demo-operator:0.0.1
-$ docker push docker.io/<user>/demo-operator:0.0.1
-```
 
 ## Run locally
 ```bash
