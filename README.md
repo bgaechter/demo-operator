@@ -8,7 +8,7 @@ $ operator-sdk build docker.io/<user>/demo-operator:0.0.1
 $ docker push docker.io/<user>/demo-operator:0.0.1
 ```
 
-## Run localy
+## Run locally
 ```bash
 $ operator-sdk run --local --namespace=default
 ```
